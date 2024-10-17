@@ -2,7 +2,7 @@ import db from "../database/db-connection.js";
 import bcrypt from "bcrypt";
 
 const User = {
-    createUser: async ({...args}) => {
+    create: async ({...args}) => {
         let { name, email, password, role = 'user' } = args;
         // Check if user already exists
         const existingUser = await new Promise((resolve, reject) => {
@@ -34,15 +34,38 @@ const User = {
 
         return result;
     },
-    fetch: async (id = '') => {
-        const query = `SELECT id,name,email,role FROM users WHERE id = ?`;
-        const params = [id];
+    fetch: async ({id = '', email = ''}) => {
+        let query = `SELECT id,name,email,role,password FROM users WHERE`;
+        let params = [];
+        if(id){
+            query += ` id = ?`;
+            params.push(id);
+        }
+        if(email){
+            query += ` email = ?`;
+            params.push(email);
+        }
+
         const result = await new Promise((resolve, reject) => {
             db.get(query, params, (err, row) => {
                 if (err) {
                     reject(err);
                 } else {
-                    
+                    resolve(row);
+                }
+            });
+        });
+
+        return result;
+    },
+    login: async ({ email, password }) => {
+        const query = `SELECT id,name,email,role FROM users WHERE email = ?`;
+        const params = [email];
+        const result = await new Promise((resolve, reject) => {
+            db.get(query, params, (err, row) => {
+                if (err) {
+                    reject(err);
+                } else {
                     resolve(row);
                 }
             });
